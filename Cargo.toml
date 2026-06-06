@@ -1,0 +1,19 @@
+[package]
+name = "url_shortener"
+version = "0.1.0"
+edition = "2024"
+build = "build.rs"
+
+[dependencies]
+axum = "0.8"
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+sqlx = { version = "0.8", features = ["sqlite", "runtime-tokio-rustls", "migrate"] }
+chrono = { version = "0.4", features = ["serde"] }
+tracing-subscriber = "0.3"
+tower-http = { version = "0.6", features = ["trace"] }
+url = "2"
+uuid = { version = "1", features = ["v4"] }
+moka = { version = "0.12.15", features = ["future"] }
+tower_governor = "0.8.0"
+qrcode = "0.14.1"
