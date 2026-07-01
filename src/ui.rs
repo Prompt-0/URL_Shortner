@@ -114,6 +114,10 @@ pub const HOME_HTML: &str = r#"
       box-shadow: 0 10px 20px -10px rgba(139, 92, 246, 0.5);
       background: linear-gradient(135deg, #4f46e5, #7c3aed);
     }
+    button:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.5);
+    }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
@@ -128,7 +132,7 @@ pub const HOME_HTML: &str = r#"
     <div class="glass-card">
       <form action="/shorten" method="post">
         <div class="form-group">
-          <label for="url">Long URL</label>
+          <label for="url">Long URL <span style="color: #ef4444;" aria-hidden="true">*</span></label>
           <input id="url" name="url" type="url" placeholder="https://example.com/very-long-url" required>
         </div>
         <div class="form-group">
@@ -226,6 +230,11 @@ pub const SUCCESS_HTML_TEMPLATE: &str = r#"
     .value a:hover {
       color: #93c5fd;
     }
+    .value a:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.5);
+      border-radius: 4px;
+    }
     .value code {
       background: rgba(0, 0, 0, 0.3);
       padding: 0.4rem 0.8rem;
@@ -251,6 +260,10 @@ pub const SUCCESS_HTML_TEMPLATE: &str = r#"
     .actions a:hover {
       background: rgba(255, 255, 255, 0.2);
       transform: translateY(-2px);
+    }
+    .actions a:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
     }
     @keyframes fadeIn {
       from { opacity: 0; transform: scale(0.95); }
@@ -392,6 +405,11 @@ pub const STATS_HTML_TEMPLATE: &str = r#"
       border-radius: 4px;
     }
     .detail-value a { color: #60a5fa; text-decoration: none; }
+    .detail-value a:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.5);
+      border-radius: 4px;
+    }
     .actions {
       margin-top: 2rem;
       text-align: center;
@@ -409,6 +427,10 @@ pub const STATS_HTML_TEMPLATE: &str = r#"
     .actions a:hover {
       background: rgba(255, 255, 255, 0.2);
       transform: translateY(-2px);
+    }
+    .actions a:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
     }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
