@@ -5,7 +5,7 @@ use crate::{
     services,
     state::AppState,
     ui,
-    utils::{escape_html, normalize_url, validate_custom_code},
+    utils::{escape_html, normalize_url, render_template, validate_custom_code},
 };
 use axum::{
     extract::{ConnectInfo, Form, Path, State},
@@ -34,33 +34,38 @@ pub async fn shorten(
     }
 
     let record = services::create_link(
-        &state.pool, 
-        &original_url, 
+        &state.pool,
+        &original_url,
         input.custom_code.as_deref(),
         input.expires_at.as_deref(),
-        input.password.as_deref()
+        input.password.as_deref(),
     )
-        .await
-        .map_err(|err| match err {
-            services::CreateLinkError::DuplicateCode => {
-                AppError::conflict("That custom code is already taken.")
-            }
-            services::CreateLinkError::Exhausted => AppError::service_unavailable(
-                "Could not allocate a unique short code. Please try again.",
-            ),
-            services::CreateLinkError::Database(db_err) => {
-                AppError::internal(format!("Database error: {db_err}"))
-            }
-        })?;
+    .await
+    .map_err(|err| match err {
+        services::CreateLinkError::DuplicateCode => {
+            AppError::conflict("That custom code is already taken.")
+        }
+        services::CreateLinkError::Exhausted => AppError::service_unavailable(
+            "Could not allocate a unique short code. Please try again.",
+        ),
+        services::CreateLinkError::Database(db_err) => {
+            AppError::internal(format!("Database error: {db_err}"))
+        }
+    })?;
 
     let short_url = format!("{}/{}", state.base_url.trim_end_matches('/'), record.code);
     let stats_url = format!("/stats/{}", record.code);
 
-    let body = ui::SUCCESS_HTML_TEMPLATE
-        .replace("{code}", &record.code)
-        .replace("{short_url}", &short_url)
-        .replace("{stats_url}", &stats_url)
-        .replace("{original_url}", &escape_html(&record.original_url));
+    let escaped_original = escape_html(&record.original_url);
+    let body = render_template(
+        ui::SUCCESS_HTML_TEMPLATE,
+        &[
+            ("{code}", record.code.as_str()),
+            ("{short_url}", short_url.as_str()),
+            ("{stats_url}", stats_url.as_str()),
+            ("{original_url}", escaped_original.as_str()),
+        ],
+    );
 
     Ok(Html(body))
 }
@@ -88,26 +93,48 @@ pub async fn redirect_short_link(
                 }
             }
         }
-        
+
         if link.password.is_some() {
-            // Password protection UI is pending. 
+            // Password protection UI is pending.
             // For now, prevent caching and redirecting to original url silently.
-            return Err(AppError::bad_request("This link is password protected. UI pending."));
+            return Err(AppError::bad_request(
+                "This link is password protected. UI pending.",
+            ));
         }
-        
-        state.cache.insert(code.clone(), link.original_url.clone()).await;
+
+        state
+            .cache
+            .insert(code.clone(), link.original_url.clone())
+            .await;
         link.original_url
     };
 
     let pool = state.pool.clone();
     let code_clone = code.clone();
-    
-    let user_agent = headers.get(axum::http::header::USER_AGENT).and_then(|v| v.to_str().ok()).map(|s| s.to_string());
-    let referer = headers.get(axum::http::header::REFERER).and_then(|v| v.to_str().ok()).map(|s| s.to_string());
-    let ip = headers.get("X-Forwarded-For").and_then(|v| v.to_str().ok()).map(|s| s.to_string()).unwrap_or_else(|| addr.ip().to_string());
+
+    let user_agent = headers
+        .get(axum::http::header::USER_AGENT)
+        .and_then(|v| v.to_str().ok())
+        .map(|s| s.to_string());
+    let referer = headers
+        .get(axum::http::header::REFERER)
+        .and_then(|v| v.to_str().ok())
+        .map(|s| s.to_string());
+    let ip = headers
+        .get("X-Forwarded-For")
+        .and_then(|v| v.to_str().ok())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| addr.ip().to_string());
 
     tokio::spawn(async move {
-        let _ = db::log_click(&pool, &code_clone, user_agent.as_deref(), referer.as_deref(), Some(&ip)).await;
+        let _ = db::log_click(
+            &pool,
+            &code_clone,
+            user_agent.as_deref(),
+            referer.as_deref(),
+            Some(&ip),
+        )
+        .await;
     });
 
     Ok(Redirect::temporary(&original_url))
@@ -127,13 +154,24 @@ pub async fn stats(
     let short_url = format!("{}/{}", state.base_url.trim_end_matches('/'), link.code);
     let stats_url = format!("/stats/{}", link.code);
 
-    let html = ui::STATS_HTML_TEMPLATE
-        .replace("{code}", &escape_html(&link.code))
-        .replace("{short_url}", &escape_html(&short_url))
-        .replace("{stats_url}", &escape_html(&stats_url))
-        .replace("{original_url}", &escape_html(&link.original_url))
-        .replace("{created_at}", &escape_html(&link.created_at))
-        .replace("{clicks}", &link.clicks.to_string());
+    let escaped_code = escape_html(&link.code);
+    let escaped_short_url = escape_html(&short_url);
+    let escaped_stats_url = escape_html(&stats_url);
+    let escaped_original = escape_html(&link.original_url);
+    let escaped_created = escape_html(&link.created_at);
+    let clicks_str = link.clicks.to_string();
+
+    let html = render_template(
+        ui::STATS_HTML_TEMPLATE,
+        &[
+            ("{code}", escaped_code.as_str()),
+            ("{short_url}", escaped_short_url.as_str()),
+            ("{stats_url}", escaped_stats_url.as_str()),
+            ("{original_url}", escaped_original.as_str()),
+            ("{created_at}", escaped_created.as_str()),
+            ("{clicks}", clicks_str.as_str()),
+        ],
+    );
 
     Ok(Html(html))
 }
@@ -146,18 +184,16 @@ pub async fn qr_code(
     use qrcode::render::svg;
 
     let short_url = format!("{}/{}", state.base_url.trim_end_matches('/'), code);
-    
+
     let qr = QrCode::new(short_url.as_bytes())
         .map_err(|e| AppError::internal(format!("QR generation error: {e}")))?;
-        
-    let image = qr.render::<svg::Color>()
+
+    let image = qr
+        .render::<svg::Color>()
         .min_dimensions(200, 200)
         .dark_color(svg::Color("#0b0f19"))
         .light_color(svg::Color("#f8fafc"))
         .build();
-        
-    Ok((
-        [(axum::http::header::CONTENT_TYPE, "image/svg+xml")],
-        image
-    ))
+
+    Ok(([(axum::http::header::CONTENT_TYPE, "image/svg+xml")], image))
 }
