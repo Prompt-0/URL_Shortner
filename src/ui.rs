@@ -133,11 +133,11 @@ pub const HOME_HTML: &str = r#"
       <form action="/shorten" method="post">
         <div class="form-group">
           <label for="url">Long URL <span style="color: #ef4444;" aria-hidden="true">*</span></label>
-          <input id="url" name="url" type="url" placeholder="https://example.com/very-long-url" required>
+          <input id="url" name="url" type="url" placeholder="https://example.com/very-long-url" required autofocus>
         </div>
         <div class="form-group">
           <label for="custom_code">Custom Alias (Optional)</label>
-          <input id="custom_code" name="custom_code" type="text" placeholder="e.g. my-link">
+          <input id="custom_code" name="custom_code" type="text" placeholder="e.g. my-link" minlength="3" maxlength="32" pattern="[a-zA-Z0-9\-_]+" title="Only letters, numbers, hyphens, and underscores are allowed. Must be 3-32 characters.">
         </div>
         <button type="submit">Create Short Link</button>
       </form>
@@ -460,7 +460,7 @@ pub const STATS_HTML_TEMPLATE: &str = r#"
         </div>
         <div class="detail-row">
           <span class="detail-label">Original URL</span>
-          <span class="detail-value" style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{original_url}</span>
+          <span class="detail-value" style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{original_url}">{original_url}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Created At</span>
