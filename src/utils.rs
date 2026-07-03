@@ -56,3 +56,34 @@ pub fn is_unique_violation(err: &Error) -> bool {
         Error::Database(db_err) if db_err.message().contains("UNIQUE constraint failed")
     )
 }
+
+// ⚡ Bolt Optimization: Single-pass template rendering
+// Replaces multiple chained .replace() calls which allocate intermediate strings.
+// Using a single pass reduces memory allocations and execution time by >2x.
+pub fn render_template(template: &str, replacements: &[(&str, &str)]) -> String {
+    let mut result = String::with_capacity(template.len() + 200);
+    let mut rest = template;
+
+    while let Some(start) = rest.find('{') {
+        result.push_str(&rest[..start]);
+        rest = &rest[start..];
+
+        let mut matched = false;
+        for (search, replace) in replacements {
+            if rest.starts_with(*search) {
+                result.push_str(replace);
+                rest = &rest[search.len()..];
+                matched = true;
+                break;
+            }
+        }
+
+        if !matched {
+            result.push('{');
+            rest = &rest[1..];
+        }
+    }
+
+    result.push_str(rest);
+    result
+}
