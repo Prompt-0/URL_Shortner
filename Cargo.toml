@@ -17,3 +17,7 @@ uuid = { version = "1", features = ["v4"] }
 moka = { version = "0.12.15", features = ["future"] }
 tower_governor = "0.8.0"
 qrcode = "0.14.1"
+
+[dev-dependencies]
+sqlx = { version = "0.8", features = ["sqlite", "runtime-tokio-rustls"] }
+tokio = { version = "1", features = ["full"] }
