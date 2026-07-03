@@ -6,6 +6,7 @@ use axum::{
 #[derive(Debug)]
 pub enum AppError {
     BadRequest(String),
+    Unauthorized(String),
     Conflict(String),
     NotFound(String),
     ServiceUnavailable(String),
@@ -13,6 +14,10 @@ pub enum AppError {
 }
 
 impl AppError {
+    pub fn unauthorized(message: impl Into<String>) -> Self {
+        Self::Unauthorized(message.into())
+    }
+
     pub fn bad_request(message: impl Into<String>) -> Self {
         Self::BadRequest(message.into())
     }
@@ -36,6 +41,7 @@ impl AppError {
     fn status(&self) -> StatusCode {
         match self {
             Self::BadRequest(_) => StatusCode::BAD_REQUEST,
+            Self::Unauthorized(_) => StatusCode::UNAUTHORIZED,
             Self::Conflict(_) => StatusCode::CONFLICT,
             Self::NotFound(_) => StatusCode::NOT_FOUND,
             Self::ServiceUnavailable(_) => StatusCode::SERVICE_UNAVAILABLE,
@@ -46,6 +52,7 @@ impl AppError {
     fn title(&self) -> &'static str {
         match self {
             Self::BadRequest(_) => "Bad request",
+            Self::Unauthorized(_) => "Unauthorized",
             Self::Conflict(_) => "Conflict",
             Self::NotFound(_) => "Not found",
             Self::ServiceUnavailable(_) => "Service unavailable",
@@ -56,6 +63,7 @@ impl AppError {
     fn message(&self) -> &str {
         match self {
             Self::BadRequest(message)
+            | Self::Unauthorized(message)
             | Self::Conflict(message)
             | Self::NotFound(message)
             | Self::ServiceUnavailable(message)
