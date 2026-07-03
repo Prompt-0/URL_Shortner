@@ -38,7 +38,9 @@ pub async fn create_link(
     let created_at = Utc::now().to_rfc3339();
 
     if let Some(code) = custom_code {
-        return match db::insert_link(pool, code, original_url, &created_at, expires_at, password).await {
+        return match db::insert_link(pool, code, original_url, &created_at, expires_at, password)
+            .await
+        {
             Ok(()) => Ok(LinkRecord {
                 code: code.to_string(),
                 original_url: original_url.to_string(),
