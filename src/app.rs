@@ -1,10 +1,7 @@
 use crate::{api, handlers, state::AppState};
 use axum::Router;
 use moka::future::Cache;
-use sqlx::{
-    SqlitePool,
-    sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions},
-};
+use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions};
 use std::{env, error::Error, fs, net::SocketAddr, path::PathBuf};
 use tower_http::trace::TraceLayer;
 
@@ -36,7 +33,11 @@ pub async fn run() -> Result<(), Box<dyn Error + Send + Sync>> {
         .time_to_live(std::time::Duration::from_secs(60 * 60))
         .build();
 
-    let state = AppState { pool, base_url, cache };
+    let state = AppState {
+        pool,
+        base_url,
+        cache,
+    };
 
     let app = router(state).layer(TraceLayer::new_for_http());
 
@@ -44,16 +45,18 @@ pub async fn run() -> Result<(), Box<dyn Error + Send + Sync>> {
     println!("Server running at http://{addr}");
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
-    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>())
-        .with_graceful_shutdown(shutdown_signal())
-        .await?;
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .with_graceful_shutdown(shutdown_signal())
+    .await?;
 
     Ok(())
 }
 
 fn router(state: AppState) -> Router {
-    use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
-    use std::sync::Arc;
+    use tower_governor::governor::GovernorConfigBuilder;
 
     let governor_conf = Box::new(
         GovernorConfigBuilder::default()
@@ -73,7 +76,10 @@ fn router(state: AppState) -> Router {
             axum::routing::post(handlers::shorten).layer(governor_layer.clone()),
         )
         .route("/stats/{code}", axum::routing::get(handlers::stats))
-        .route("/api/v1/links", axum::routing::post(api::create_link).layer(governor_layer))
+        .route(
+            "/api/v1/links",
+            axum::routing::post(api::create_link).layer(governor_layer),
+        )
         .route("/api/v1/links/{code}", axum::routing::get(api::get_link))
         .route("/qr/{code}", axum::routing::get(handlers::qr_code))
         .route("/{code}", axum::routing::get(handlers::redirect_short_link))

@@ -30,28 +30,28 @@ pub async fn shorten(
         .map_err(|e| AppError::bad_request(format!("Invalid URL: {e}")))?;
 
     if let Some(code) = input.custom_code.as_deref() {
-        validate_custom_code(code).map_err(|e| AppError::bad_request(e))?;
+        validate_custom_code(code).map_err(AppError::bad_request)?;
     }
 
     let record = services::create_link(
-        &state.pool, 
-        &original_url, 
+        &state.pool,
+        &original_url,
         input.custom_code.as_deref(),
         input.expires_at.as_deref(),
-        input.password.as_deref()
+        input.password.as_deref(),
     )
-        .await
-        .map_err(|err| match err {
-            services::CreateLinkError::DuplicateCode => {
-                AppError::conflict("That custom code is already taken.")
-            }
-            services::CreateLinkError::Exhausted => AppError::service_unavailable(
-                "Could not allocate a unique short code. Please try again.",
-            ),
-            services::CreateLinkError::Database(db_err) => {
-                AppError::internal(format!("Database error: {db_err}"))
-            }
-        })?;
+    .await
+    .map_err(|err| match err {
+        services::CreateLinkError::DuplicateCode => {
+            AppError::conflict("That custom code is already taken.")
+        }
+        services::CreateLinkError::Exhausted => AppError::service_unavailable(
+            "Could not allocate a unique short code. Please try again.",
+        ),
+        services::CreateLinkError::Database(db_err) => {
+            AppError::internal(format!("Database error: {db_err}"))
+        }
+    })?;
 
     let short_url = format!("{}/{}", state.base_url.trim_end_matches('/'), record.code);
     let stats_url = format!("/stats/{}", record.code);
@@ -81,33 +81,54 @@ pub async fn redirect_short_link(
             return Err(AppError::not_found("Short link not found"));
         };
 
-        if let Some(expires) = &link.expires_at {
-            if let Ok(exp_time) = chrono::DateTime::parse_from_rfc3339(expires) {
-                if chrono::Utc::now() > exp_time {
-                    return Err(AppError::not_found("This link has expired"));
-                }
-            }
+        if let Some(expires) = &link.expires_at
+            && let Ok(exp_time) = chrono::DateTime::parse_from_rfc3339(expires)
+            && chrono::Utc::now() > exp_time
+        {
+            return Err(AppError::not_found("This link has expired"));
         }
-        
+
         if link.password.is_some() {
-            // Password protection UI is pending. 
+            // Password protection UI is pending.
             // For now, prevent caching and redirecting to original url silently.
-            return Err(AppError::bad_request("This link is password protected. UI pending."));
+            return Err(AppError::bad_request(
+                "This link is password protected. UI pending.",
+            ));
         }
-        
-        state.cache.insert(code.clone(), link.original_url.clone()).await;
+
+        state
+            .cache
+            .insert(code.clone(), link.original_url.clone())
+            .await;
         link.original_url
     };
 
     let pool = state.pool.clone();
     let code_clone = code.clone();
-    
-    let user_agent = headers.get(axum::http::header::USER_AGENT).and_then(|v| v.to_str().ok()).map(|s| s.to_string());
-    let referer = headers.get(axum::http::header::REFERER).and_then(|v| v.to_str().ok()).map(|s| s.to_string());
-    let ip = headers.get("X-Forwarded-For").and_then(|v| v.to_str().ok()).map(|s| s.to_string()).unwrap_or_else(|| addr.ip().to_string());
+
+    let user_agent = headers
+        .get(axum::http::header::USER_AGENT)
+        .and_then(|v| v.to_str().ok())
+        .map(|s| s.to_string());
+    let referer = headers
+        .get(axum::http::header::REFERER)
+        .and_then(|v| v.to_str().ok())
+        .map(|s| s.to_string());
+    let ip = headers
+        .get("X-Forwarded-For")
+        .and_then(|v| v.to_str().ok())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| addr.ip().to_string());
 
     tokio::spawn(async move {
-        let _ = db::log_click(&pool, &code_clone, user_agent.as_deref(), referer.as_deref(), Some(&ip)).await;
+        let _ = db::log_click(
+            &pool,
+            &code_clone,
+            user_agent.as_deref(),
+            referer.as_deref(),
+            Some(&ip),
+        )
+        .await;
     });
 
     Ok(Redirect::temporary(&original_url))
@@ -146,18 +167,16 @@ pub async fn qr_code(
     use qrcode::render::svg;
 
     let short_url = format!("{}/{}", state.base_url.trim_end_matches('/'), code);
-    
+
     let qr = QrCode::new(short_url.as_bytes())
         .map_err(|e| AppError::internal(format!("QR generation error: {e}")))?;
-        
-    let image = qr.render::<svg::Color>()
+
+    let image = qr
+        .render::<svg::Color>()
         .min_dimensions(200, 200)
         .dark_color(svg::Color("#0b0f19"))
         .light_color(svg::Color("#f8fafc"))
         .build();
-        
-    Ok((
-        [(axum::http::header::CONTENT_TYPE, "image/svg+xml")],
-        image
-    ))
+
+    Ok(([(axum::http::header::CONTENT_TYPE, "image/svg+xml")], image))
 }
