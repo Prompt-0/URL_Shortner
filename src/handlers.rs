@@ -92,7 +92,7 @@ pub async fn redirect_short_link(
         if link.password.is_some() {
             // Password protection UI is pending. 
             // For now, prevent caching and redirecting to original url silently.
-            return Err(AppError::bad_request("This link is password protected. UI pending."));
+            return Err(AppError::forbidden("This link is password protected. UI pending."));
         }
         
         state.cache.insert(code.clone(), link.original_url.clone()).await;
@@ -123,6 +123,10 @@ pub async fn stats(
     else {
         return Err(AppError::not_found("Short link not found"));
     };
+
+    if link.password.is_some() {
+        return Err(AppError::forbidden("This link is password protected"));
+    }
 
     let short_url = format!("{}/{}", state.base_url.trim_end_matches('/'), link.code);
     let stats_url = format!("/stats/{}", link.code);

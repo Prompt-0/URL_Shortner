@@ -10,6 +10,7 @@ pub enum AppError {
     NotFound(String),
     ServiceUnavailable(String),
     Internal(String),
+    Forbidden(String),
 }
 
 impl AppError {
@@ -33,6 +34,10 @@ impl AppError {
         Self::Internal(message.into())
     }
 
+    pub fn forbidden(message: impl Into<String>) -> Self {
+        Self::Forbidden(message.into())
+    }
+
     fn status(&self) -> StatusCode {
         match self {
             Self::BadRequest(_) => StatusCode::BAD_REQUEST,
@@ -40,6 +45,7 @@ impl AppError {
             Self::NotFound(_) => StatusCode::NOT_FOUND,
             Self::ServiceUnavailable(_) => StatusCode::SERVICE_UNAVAILABLE,
             Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::Forbidden(_) => StatusCode::FORBIDDEN,
         }
     }
 
@@ -50,6 +56,7 @@ impl AppError {
             Self::NotFound(_) => "Not found",
             Self::ServiceUnavailable(_) => "Service unavailable",
             Self::Internal(_) => "Internal server error",
+            Self::Forbidden(_) => "Forbidden",
         }
     }
 
@@ -59,7 +66,8 @@ impl AppError {
             | Self::Conflict(message)
             | Self::NotFound(message)
             | Self::ServiceUnavailable(message)
-            | Self::Internal(message) => message,
+            | Self::Internal(message)
+            | Self::Forbidden(message) => message,
         }
     }
 }
