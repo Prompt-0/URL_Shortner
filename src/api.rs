@@ -52,7 +52,15 @@ pub async fn get_link(
         return Err(not_found("short link not found"));
     };
 
+    if link.password.is_some() {
+        return Err(forbidden("short link is password protected"));
+    }
+
     Ok(Json(link.to_response(&state.base_url)))
+}
+
+fn forbidden(message: impl Into<String>) -> (StatusCode, Json<ApiErrorResponse>) {
+    error(StatusCode::FORBIDDEN, "forbidden", message)
 }
 
 fn bad_request(message: impl Into<String>) -> (StatusCode, Json<ApiErrorResponse>) {
