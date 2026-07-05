@@ -1,0 +1,5 @@
+
+## 2024-05-24 - Authorization Bypass & Insecure Caching on Protected Links
+**Vulnerability:** The `/stats` and API endpoints were returning full metadata for password-protected and expired links, exposing the `original_url`. Furthermore, the `redirect_short_link` endpoint indiscriminately cached `original_url`s indefinitely, bypassing database-level expiration checks if a link was hit shortly before it expired.
+**Learning:** Endpoints that return metadata for a resource must enforce the same authorization and status checks (e.g. expiration, password) as the endpoint that serves the actual resource. In addition, when implementing caching, dynamic state properties like time-based expiration must be accounted for before writing to the cache.
+**Prevention:** Consistently apply `if link.password.is_some()` and expiration checks across all endpoints that access the resource. Only cache items that have no expiration date (or implement a cache TTL that matches the specific resource's expiration).
