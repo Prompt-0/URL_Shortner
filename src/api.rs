@@ -52,6 +52,18 @@ pub async fn get_link(
         return Err(not_found("short link not found"));
     };
 
+    if link.password.is_some() {
+        return Err(not_found("short link not found"));
+    }
+
+    if let Some(expires) = &link.expires_at {
+        if let Ok(exp_time) = chrono::DateTime::parse_from_rfc3339(expires) {
+            if chrono::Utc::now() > exp_time {
+                return Err(not_found("short link not found"));
+            }
+        }
+    }
+
     Ok(Json(link.to_response(&state.base_url)))
 }
 
