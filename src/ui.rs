@@ -118,6 +118,11 @@ pub const HOME_HTML: &str = r#"
       outline: none;
       box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.5);
     }
+    .help-text {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+    }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
@@ -137,7 +142,8 @@ pub const HOME_HTML: &str = r#"
         </div>
         <div class="form-group">
           <label for="custom_code">Custom Alias (Optional)</label>
-          <input id="custom_code" name="custom_code" type="text" placeholder="e.g. my-link">
+          <input id="custom_code" name="custom_code" type="text" placeholder="e.g. my-link" pattern="[A-Za-z0-9_\-]+" minlength="3" maxlength="32" aria-describedby="custom_code_help">
+          <div id="custom_code_help" class="help-text">3-32 characters: letters, numbers, hyphens, and underscores</div>
         </div>
         <button type="submit">Create Short Link</button>
       </form>
