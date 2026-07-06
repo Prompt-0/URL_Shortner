@@ -18,11 +18,9 @@ pub async fn run() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     let db_path = data_dir.join("shortener.db");
 
-    // Performance Optimization: Set `synchronous = NORMAL` when using WAL mode.
-    // This dramatically improves write concurrency and throughput by reducing `fsync` calls
-    // to the disk, while remaining safe from corruption in WAL mode.
-    // Impact: Expected to provide significantly faster write operations (e.g., when logging clicks or creating short links)
-    // with minimal overhead.
+    // ⚡ Bolt Optimization: Set PRAGMA synchronous = NORMAL for SQLite in WAL mode.
+    // In WAL mode, synchronous=NORMAL offers most of the durability of FULL,
+    // while significantly improving write throughput by avoiding heavy fsync calls.
     let options = SqliteConnectOptions::new()
         .filename(&db_path)
         .create_if_missing(true)
