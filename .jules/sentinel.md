@@ -1,0 +1,4 @@
+## 2024-07-06 - [Authorization Bypass in Cache]
+**Vulnerability:** Authorization bypass via cache in `handlers::redirect_short_link`. The cache was only storing the `original_url` string rather than the full link record. When a cached value was hit, the redirect occurred immediately, bypassing password and `expires_at` checks entirely.
+**Learning:** Caching mechanisms must store full objects or states required for authorization checks. If caching only the result (e.g. string URL), any business logic surrounding access control must either be performed *before* checking the cache or factored into the cache key. In this case, storing the full `LinkRecord` in the cache allows checks to run on cached hits.
+**Prevention:** Always verify that cache hits go through the same authorization and validation logic as cache misses.
