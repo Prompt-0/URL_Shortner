@@ -71,8 +71,8 @@ pub async fn redirect_short_link(
     headers: HeaderMap,
     Path(code): Path<String>,
 ) -> AppResult<Redirect> {
-    let original_url = if let Some(url) = state.cache.get(&code).await {
-        url
+    let link = if let Some(link_record) = state.cache.get(&code).await {
+        link_record
     } else {
         let Some(link) = db::fetch_link(&state.pool, &code)
             .await
@@ -81,23 +81,25 @@ pub async fn redirect_short_link(
             return Err(AppError::not_found("Short link not found"));
         };
 
-        if let Some(expires) = &link.expires_at {
-            if let Ok(exp_time) = chrono::DateTime::parse_from_rfc3339(expires) {
-                if chrono::Utc::now() > exp_time {
-                    return Err(AppError::not_found("This link has expired"));
-                }
+        state.cache.insert(code.clone(), link.clone()).await;
+        link
+    };
+
+    if let Some(expires) = &link.expires_at {
+        if let Ok(exp_time) = chrono::DateTime::parse_from_rfc3339(expires) {
+            if chrono::Utc::now() > exp_time {
+                return Err(AppError::not_found("This link has expired"));
             }
         }
-        
-        if link.password.is_some() {
-            // Password protection UI is pending. 
-            // For now, prevent caching and redirecting to original url silently.
-            return Err(AppError::bad_request("This link is password protected. UI pending."));
-        }
-        
-        state.cache.insert(code.clone(), link.original_url.clone()).await;
-        link.original_url
-    };
+    }
+
+    if link.password.is_some() {
+        // Password protection UI is pending.
+        // For now, prevent redirecting to original url silently.
+        return Err(AppError::bad_request("This link is password protected. UI pending."));
+    }
+
+    let original_url = link.original_url;
 
     let pool = state.pool.clone();
     let code_clone = code.clone();
