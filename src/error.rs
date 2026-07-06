@@ -85,11 +85,14 @@ fn error_page(title: &str, message: &str) -> String {
     body {{ font-family: system-ui, sans-serif; max-width: 760px; margin: 40px auto; padding: 0 16px; line-height: 1.5; }}
     .card {{ border: 1px solid #ddd; border-radius: 16px; padding: 20px; }}
     code {{ background: #f5f5f5; padding: 2px 6px; border-radius: 6px; }}
+    a {{ color: #0066cc; text-decoration: none; }}
+    a:hover {{ text-decoration: underline; }}
+    a:focus-visible {{ outline: 2px solid #0066cc; outline-offset: 2px; border-radius: 4px; }}
   </style>
 </head>
 <body>
   <h1>{}</h1>
-  <div class="card">
+  <div class="card" role="alert">
     <p>{}</p>
   </div>
   <p><a href="/">Back home</a></p>
