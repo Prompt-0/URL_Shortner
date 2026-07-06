@@ -78,10 +78,8 @@ pub async fn redirect_short_link(
     headers: HeaderMap,
     Path(code): Path<String>,
 ) -> AppResult<Redirect> {
-    validate_custom_code(&code).map_err(|e| AppError::bad_request(e))?;
-
-    let original_url = if let Some(url) = state.cache.get(&code).await {
-        url
+    let link = if let Some(link_record) = state.cache.get(&code).await {
+        link_record
     } else {
         let Some(link) = db::fetch_link(&state.pool, &code).await.map_err(|e| {
             tracing::error!("Database error: {e}");
@@ -101,21 +99,15 @@ pub async fn redirect_short_link(
                 return Err(AppError::not_found("This link has expired"));
             }
         }
+    }
 
-        if link.password.is_some() {
-            // Password protection UI is pending.
-            // For now, prevent caching and redirecting to original url silently.
-            return Err(AppError::bad_request(
-                "This link is password protected. UI pending.",
-            ));
-        }
+    if link.password.is_some() {
+        // Password protection UI is pending.
+        // For now, prevent redirecting to original url silently.
+        return Err(AppError::bad_request("This link is password protected. UI pending."));
+    }
 
-        state
-            .cache
-            .insert(code.clone(), link.original_url.clone())
-            .await;
-        link.original_url
-    };
+    let original_url = link.original_url;
 
     let pool = state.pool.clone();
     let code_clone = code.clone();
