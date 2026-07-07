@@ -1,0 +1,4 @@
+## 2024-05-15 - [Prevent IP Spoofing]
+**Vulnerability:** The application was using the `X-Forwarded-For` header for IP address logging in analytics.
+**Learning:** This is a common mistake and introduces a serious security flaw. The `X-Forwarded-For` header is easily spoofed by malicious users, allowing them to forge their origin IP and evade security monitoring or logging.
+**Prevention:** Rely on the actual TCP connection socket address to ensure accuracy when IP logging is required, avoiding implicit trust of user-supplied HTTP headers unless running behind a trusted reverse proxy that strips forged headers and appends its own.
