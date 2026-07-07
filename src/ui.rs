@@ -138,12 +138,11 @@ pub const HOME_HTML: &str = r#"
       <form action="/shorten" method="post">
         <div class="form-group">
           <label for="url">Long URL <span style="color: #ef4444;" aria-hidden="true">*</span></label>
-          <input id="url" name="url" type="url" placeholder="https://example.com/very-long-url" required>
+          <input id="url" name="url" type="url" placeholder="https://example.com/very-long-url" required autofocus>
         </div>
         <div class="form-group">
           <label for="custom_code">Custom Alias (Optional)</label>
-          <input id="custom_code" name="custom_code" type="text" placeholder="e.g. my-link" pattern="[a-zA-Z0-9\-_]+" minlength="3" maxlength="32" aria-describedby="custom_code_help" title="Must be 3-32 characters, using only letters, numbers, hyphens, and underscores">
-          <div id="custom_code_help" class="helper-text">Must be 3-32 characters, using only letters, numbers, hyphens, and underscores.</div>
+          <input id="custom_code" name="custom_code" type="text" placeholder="e.g. my-link" minlength="3" maxlength="32" pattern="[a-zA-Z0-9_-]+" title="Letters, numbers, hyphens, and underscores only">
         </div>
         <button type="submit">Create Short Link</button>
       </form>
