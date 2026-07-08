@@ -1,10 +1,6 @@
 ## 2024-07-01 - Avoid cargo fix / cargo clippy --fix
 **Learning:** Running `cargo fix` and `cargo clippy --fix` globally can introduce unstable features (like `let_chains`) or modify files outside the scope of a targeted optimization, violating the directive to make ONE small improvement.
 **Action:** Only make targeted manual changes for performance improvements. Don't run automated fixers that modify unrelated files. Avoid adding new dependencies unless absolutely necessary.
-
-## 2024-11-20 - Single-pass HTML Template Rendering
-**Learning:** Chaining multiple `.replace()` calls on a string (e.g., when rendering HTML templates) results in multiple intermediate String allocations, causing a performance overhead. In a Rust web server handling template strings manually, this can be a bottleneck.
-**Action:** Use a single-pass rendering approach instead of chained `.replace()` calls. A custom function (`render_template` using `String::with_capacity` and a `while` loop) replaces variables in one pass, effectively reducing memory allocations and dramatically improving performance (benchmarked ~2x speedup).
-## 2024-07-28 - Avoid Intermediate String Allocations
-**Learning:** Generating string representations of UUIDs via `.to_string()` followed by string slicing and another `.to_string()` causes unnecessary heap allocations. Using `Uuid::encode_buffer()` with `.encode_lower()` writes directly to a stack-allocated buffer and avoids string allocation, making the function slightly faster and putting less pressure on the memory allocator.
-**Action:** Prefer `encode_buffer()` over `.to_string()` for UUID representations when a string slice of the ID is needed.
+## 2024-07-08 - Single-pass HTML Template Rendering
+**Learning:** Chained `.replace()` calls on large HTML template strings cause multiple unnecessary memory allocations and redundant string traversals. This was identified as a performance bottleneck in `src/handlers.rs`.
+**Action:** Replaced chained `.replace()` calls with a custom `render_template` utility function in `src/utils.rs` that performs single-pass string building with pre-allocated capacity. Ensure future string template substitutions avoid chained replaces.
