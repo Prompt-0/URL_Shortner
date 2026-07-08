@@ -50,6 +50,35 @@ pub fn escape_html(input: &str) -> String {
     out
 }
 
+// ⚡ Bolt Optimization: Single-pass template rendering
+// Replaces chained `.replace()` calls to prevent multiple intermediate string allocations.
+pub fn render_template(template: &str, replacements: &[(&str, &str)]) -> String {
+    let mut result = String::with_capacity(template.len() + 256);
+    let mut remaining = template;
+
+    while let Some(pos) = remaining.find('{') {
+        result.push_str(&remaining[..pos]);
+        remaining = &remaining[pos..];
+
+        let mut matched = false;
+        for &(key, value) in replacements {
+            if remaining.starts_with(key) {
+                result.push_str(value);
+                remaining = &remaining[key.len()..];
+                matched = true;
+                break;
+            }
+        }
+
+        if !matched {
+            result.push('{');
+            remaining = &remaining[1..];
+        }
+    }
+    result.push_str(remaining);
+    result
+}
+
 pub fn is_unique_violation(err: &Error) -> bool {
     matches!(
         err,
