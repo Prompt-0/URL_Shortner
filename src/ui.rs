@@ -137,7 +137,7 @@ pub const HOME_HTML: &str = r#"
         </div>
         <div class="form-group">
           <label for="custom_code">Custom Alias (Optional)</label>
-          <input id="custom_code" name="custom_code" type="text" placeholder="e.g. my-link">
+          <input id="custom_code" name="custom_code" type="text" placeholder="e.g. my-link" pattern="[A-Za-z0-9\-_]+" minlength="3" maxlength="32" title="Custom code must be between 3 and 32 characters and contain only letters, numbers, hyphens, and underscores.">
         </div>
         <button type="submit">Create Short Link</button>
       </form>
