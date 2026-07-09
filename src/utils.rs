@@ -56,3 +56,37 @@ pub fn is_unique_violation(err: &Error) -> bool {
         Error::Database(db_err) if db_err.message().contains("UNIQUE constraint failed")
     )
 }
+
+// ⚡ Bolt Optimization: Single-pass template rendering
+// Replaces chained `.replace()` calls which allocate intermediate strings for each token.
+// Uses a single String with pre-allocated capacity to build the output in one pass.
+pub fn render_template(template: &str, replacements: &[(&str, &str)]) -> String {
+    let mut result = String::with_capacity(template.len() + 256);
+    let mut last_end = 0;
+
+    while let Some(start) = template[last_end..].find('{') {
+        let abs_start = last_end + start;
+        if let Some(end) = template[abs_start..].find('}') {
+            let abs_end = abs_start + end;
+            let token = &template[abs_start..=abs_end];
+            let mut found = false;
+            for &(k, v) in replacements {
+                if k == token {
+                    result.push_str(&template[last_end..abs_start]);
+                    result.push_str(v);
+                    last_end = abs_end + 1;
+                    found = true;
+                    break;
+                }
+            }
+            if !found {
+                result.push_str(&template[last_end..=abs_start]);
+                last_end = abs_start + 1;
+            }
+        } else {
+            break;
+        }
+    }
+    result.push_str(&template[last_end..]);
+    result
+}
