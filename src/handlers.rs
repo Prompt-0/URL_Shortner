@@ -5,7 +5,7 @@ use crate::{
     services,
     state::AppState,
     ui,
-    utils::{escape_html, normalize_url, validate_custom_code},
+    utils::{escape_html, normalize_url, render_template, validate_custom_code},
 };
 use axum::{
     extract::{ConnectInfo, Form, Path, State},
@@ -56,11 +56,16 @@ pub async fn shorten(
     let short_url = format!("{}/{}", state.base_url.trim_end_matches('/'), record.code);
     let stats_url = format!("/stats/{}", record.code);
 
-    let body = ui::SUCCESS_HTML_TEMPLATE
-        .replace("{code}", &record.code)
-        .replace("{short_url}", &short_url)
-        .replace("{stats_url}", &stats_url)
-        .replace("{original_url}", &escape_html(&record.original_url));
+    let original_url_escaped = escape_html(&record.original_url);
+    let body = render_template(
+        ui::SUCCESS_HTML_TEMPLATE,
+        &[
+            ("{code}", &record.code),
+            ("{short_url}", &short_url),
+            ("{stats_url}", &stats_url),
+            ("{original_url}", &original_url_escaped),
+        ],
+    );
 
     Ok(Html(body))
 }
@@ -127,13 +132,24 @@ pub async fn stats(
     let short_url = format!("{}/{}", state.base_url.trim_end_matches('/'), link.code);
     let stats_url = format!("/stats/{}", link.code);
 
-    let html = ui::STATS_HTML_TEMPLATE
-        .replace("{code}", &escape_html(&link.code))
-        .replace("{short_url}", &escape_html(&short_url))
-        .replace("{stats_url}", &escape_html(&stats_url))
-        .replace("{original_url}", &escape_html(&link.original_url))
-        .replace("{created_at}", &escape_html(&link.created_at))
-        .replace("{clicks}", &link.clicks.to_string());
+    let code_escaped = escape_html(&link.code);
+    let short_url_escaped = escape_html(&short_url);
+    let stats_url_escaped = escape_html(&stats_url);
+    let original_url_escaped = escape_html(&link.original_url);
+    let created_at_escaped = escape_html(&link.created_at);
+    let clicks_string = link.clicks.to_string();
+
+    let html = render_template(
+        ui::STATS_HTML_TEMPLATE,
+        &[
+            ("{code}", &code_escaped),
+            ("{short_url}", &short_url_escaped),
+            ("{stats_url}", &stats_url_escaped),
+            ("{original_url}", &original_url_escaped),
+            ("{created_at}", &created_at_escaped),
+            ("{clicks}", &clicks_string),
+        ],
+    );
 
     Ok(Html(html))
 }
