@@ -50,6 +50,39 @@ pub fn escape_html(input: &str) -> String {
     out
 }
 
+// ⚡ Bolt Optimization: Single-pass template rendering
+// Replaces multiple chained .replace() calls which allocate intermediate strings
+// with a single pre-allocated String. Yields a significant performance improvement
+// when rendering HTML pages with multiple placeholders.
+pub fn render_template(template: &str, vars: &[(&str, &str)]) -> String {
+    let mut result = String::with_capacity(template.len() + 512);
+    let mut current = template;
+
+    while let Some(pos) = current.find('{') {
+        result.push_str(&current[..pos]);
+        current = &current[pos..];
+
+        let mut matched = false;
+        for &(key, value) in vars {
+            if current.starts_with(key) {
+                result.push_str(value);
+                current = &current[key.len()..];
+                matched = true;
+                break;
+            }
+        }
+
+        if !matched {
+            let next_char = current.chars().next().unwrap();
+            result.push(next_char);
+            current = &current[next_char.len_utf8()..];
+        }
+    }
+
+    result.push_str(current);
+    result
+}
+
 pub fn is_unique_violation(err: &Error) -> bool {
     matches!(
         err,
