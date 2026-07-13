@@ -1,3 +1,6 @@
 ## 2024-07-01 - Enhance Form Indicators and Keyboard Navigation
 **Learning:** Found that custom UI components (like glassmorphism cards and stylized links/buttons) in this URL shortener lacked `:focus-visible` states, which makes keyboard navigation difficult. Also, required form fields were missing visual indicators for users, making form validation less apparent.
 **Action:** Always verify that custom stylized buttons and links include `:focus-visible` styles that contrast well with their backgrounds. Ensure required form inputs explicitly mark their necessity visually, like with an asterisk.
+## 2024-07-13 - HTML5 Form Validation for Better UX
+**Learning:** In a server-rendered app with generic error pages, users lose their form state when submitting invalid data (like an incorrect custom alias format). The backend validates this, but the generic error page makes it difficult for users to correct their input without re-entering the entire form.
+**Action:** Always sync backend validation constraints (e.g., allowed characters, minimum/maximum length) with HTML5 form validation attributes (`pattern`, `minlength`, `maxlength`, `title`) in the UI templates. This provides immediate, inline feedback to the user and prevents frustrating form state loss.
