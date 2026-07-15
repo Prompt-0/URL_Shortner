@@ -56,11 +56,15 @@ pub async fn shorten(
     let short_url = format!("{}/{}", state.base_url.trim_end_matches('/'), record.code);
     let stats_url = format!("/stats/{}", record.code);
 
-    let body = ui::SUCCESS_HTML_TEMPLATE
-        .replace("{code}", &record.code)
-        .replace("{short_url}", &short_url)
-        .replace("{stats_url}", &stats_url)
-        .replace("{original_url}", &escape_html(&record.original_url));
+    let body = crate::utils::render_template(
+        ui::SUCCESS_HTML_TEMPLATE,
+        &[
+            ("{code}", &record.code),
+            ("{short_url}", &short_url),
+            ("{stats_url}", &stats_url),
+            ("{original_url}", &escape_html(&record.original_url)),
+        ],
+    );
 
     Ok(Html(body))
 }
@@ -127,13 +131,18 @@ pub async fn stats(
     let short_url = format!("{}/{}", state.base_url.trim_end_matches('/'), link.code);
     let stats_url = format!("/stats/{}", link.code);
 
-    let html = ui::STATS_HTML_TEMPLATE
-        .replace("{code}", &escape_html(&link.code))
-        .replace("{short_url}", &escape_html(&short_url))
-        .replace("{stats_url}", &escape_html(&stats_url))
-        .replace("{original_url}", &escape_html(&link.original_url))
-        .replace("{created_at}", &escape_html(&link.created_at))
-        .replace("{clicks}", &link.clicks.to_string());
+    let clicks_str = link.clicks.to_string();
+    let html = crate::utils::render_template(
+        ui::STATS_HTML_TEMPLATE,
+        &[
+            ("{code}", &escape_html(&link.code)),
+            ("{short_url}", &escape_html(&short_url)),
+            ("{stats_url}", &escape_html(&stats_url)),
+            ("{original_url}", &escape_html(&link.original_url)),
+            ("{created_at}", &escape_html(&link.created_at)),
+            ("{clicks}", &clicks_str),
+        ],
+    );
 
     Ok(Html(html))
 }
