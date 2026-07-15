@@ -104,7 +104,7 @@ pub async fn redirect_short_link(
     
     let user_agent = headers.get(axum::http::header::USER_AGENT).and_then(|v| v.to_str().ok()).map(|s| s.to_string());
     let referer = headers.get(axum::http::header::REFERER).and_then(|v| v.to_str().ok()).map(|s| s.to_string());
-    let ip = headers.get("X-Forwarded-For").and_then(|v| v.to_str().ok()).map(|s| s.to_string()).unwrap_or_else(|| addr.ip().to_string());
+    let ip = addr.ip().to_string();
 
     tokio::spawn(async move {
         let _ = db::log_click(&pool, &code_clone, user_agent.as_deref(), referer.as_deref(), Some(&ip)).await;
