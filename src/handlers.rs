@@ -49,7 +49,8 @@ pub async fn shorten(
                 "Could not allocate a unique short code. Please try again.",
             ),
             services::CreateLinkError::Database(db_err) => {
-                AppError::internal(format!("Database error: {db_err}"))
+                tracing::error!("Database error: {db_err}");
+                AppError::internal("Internal server error")
             }
         })?;
 
@@ -78,10 +79,10 @@ pub async fn redirect_short_link(
     let original_url = if let Some(url) = state.cache.get(&code).await {
         url
     } else {
-        let Some(link) = db::fetch_link(&state.pool, &code)
-            .await
-            .map_err(|e| AppError::internal(format!("Database error: {e}")))?
-        else {
+        let Some(link) = db::fetch_link(&state.pool, &code).await.map_err(|e| {
+            tracing::error!("Database error: {e}");
+            AppError::internal("Internal server error")
+        })? else {
             return Err(AppError::not_found("Short link not found"));
         };
 
@@ -121,10 +122,10 @@ pub async fn stats(
     State(state): State<AppState>,
     Path(code): Path<String>,
 ) -> AppResult<Html<String>> {
-    let Some(link) = db::fetch_link(&state.pool, &code)
-        .await
-        .map_err(|e| AppError::internal(format!("Database error: {e}")))?
-    else {
+    let Some(link) = db::fetch_link(&state.pool, &code).await.map_err(|e| {
+        tracing::error!("Database error: {e}");
+        AppError::internal("Internal server error")
+    })? else {
         return Err(AppError::not_found("Short link not found"));
     };
 
@@ -156,8 +157,10 @@ pub async fn qr_code(
 
     let short_url = format!("{}/{}", state.base_url.trim_end_matches('/'), code);
     
-    let qr = QrCode::new(short_url.as_bytes())
-        .map_err(|e| AppError::internal(format!("QR generation error: {e}")))?;
+    let qr = QrCode::new(short_url.as_bytes()).map_err(|e| {
+        tracing::error!("QR generation error: {e}");
+        AppError::internal("Internal server error")
+    })?;
         
     let image = qr.render::<svg::Color>()
         .min_dimensions(200, 200)
