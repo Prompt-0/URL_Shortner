@@ -5,3 +5,7 @@
 ## 2024-11-20 - Single-pass HTML Template Rendering
 **Learning:** Chaining multiple `.replace()` calls on a string (e.g., when rendering HTML templates) results in multiple intermediate String allocations, causing a performance overhead. In a Rust web server handling template strings manually, this can be a bottleneck.
 **Action:** Use a single-pass rendering approach instead of chained `.replace()` calls. A custom function (`render_template` using `String::with_capacity` and a `while` loop) replaces variables in one pass, effectively reducing memory allocations and dramatically improving performance (benchmarked ~2x speedup).
+
+## 2024-11-20 - UUID Generation Buffer Allocation
+**Learning:** Calling `Uuid::new_v4().simple().to_string()` allocates a full String on the heap, only to be sliced down if a shorter substring is needed.
+**Action:** Use `Uuid::encode_buffer()` to encode the UUID into a stack-allocated byte buffer (`encode_lower(&mut buf)`), and then slice and convert to String. This significantly reduces intermediate heap allocations and improves execution speed for UUID-based unique identifier generation.

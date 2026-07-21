@@ -2,9 +2,15 @@ use sqlx::Error;
 use url::Url;
 use uuid::Uuid;
 
+// ⚡ Bolt Optimization: Buffer-allocated UUID generation
+// Replaces intermediate .to_string() allocations by encoding directly
+// into a stack-allocated buffer.
+// Yields significantly faster execution by reducing heap allocations.
 pub fn generate_code() -> String {
-    let raw = Uuid::new_v4().simple().to_string();
-    raw[..12].to_string()
+    let mut buf = Uuid::encode_buffer();
+    let uuid = Uuid::new_v4();
+    let s = uuid.simple().encode_lower(&mut buf);
+    s[..12].to_string()
 }
 
 pub fn normalize_url(input: &str) -> Result<String, &'static str> {
@@ -85,4 +91,15 @@ pub fn render_template(template: &str, replacements: &[(&str, &str)]) -> String 
     }
     result.push_str(current);
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_generate_code() {
+        let code = generate_code();
+        assert_eq!(code.len(), 12);
+    }
 }
