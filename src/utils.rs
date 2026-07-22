@@ -2,8 +2,13 @@ use sqlx::Error;
 use url::Url;
 use uuid::Uuid;
 
+// ⚡ Bolt Optimization: UUID string allocation
+// Instead of allocating a full UUID String on the heap only to slice it,
+// we write directly to a stack-allocated buffer and only allocate the final 12-byte string.
+// This eliminates one intermediate heap allocation.
 pub fn generate_code() -> String {
-    let raw = Uuid::new_v4().simple().to_string();
+    let mut buf = Uuid::encode_buffer();
+    let raw = Uuid::new_v4().simple().encode_lower(&mut buf);
     raw[..12].to_string()
 }
 
