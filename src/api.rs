@@ -23,20 +23,18 @@ pub async fn create_link(
     }
 
     let record = services::create_link(
-        &state.pool, 
-        &original_url, 
+        &state.pool,
+        &original_url,
         payload.custom_code.as_deref(),
         payload.expires_at.as_deref(),
-        payload.password.as_deref()
+        payload.password.as_deref(),
     )
-        .await
-        .map_err(|err| match err {
-            CreateLinkError::DuplicateCode => conflict("that custom code is already taken"),
-            CreateLinkError::Exhausted => {
-                service_unavailable("could not allocate a unique short code")
-            }
-            CreateLinkError::Database(db_err) => internal(&format!("database error: {db_err}")),
-        })?;
+    .await
+    .map_err(|err| match err {
+        CreateLinkError::DuplicateCode => conflict("that custom code is already taken"),
+        CreateLinkError::Exhausted => service_unavailable("could not allocate a unique short code"),
+        CreateLinkError::Database(db_err) => internal(&format!("database error: {db_err}")),
+    })?;
 
     Ok(Json(record.to_response(&state.base_url)))
 }
