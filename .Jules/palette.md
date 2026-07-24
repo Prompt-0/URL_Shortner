@@ -9,3 +9,7 @@
 ## $(date +%Y-%m-%d) - Align Frontend Validation with Backend Rules
 **Learning:** In server-rendered applications, generic error pages can cause users to lose their form input state. Adding HTML5 validation attributes (`pattern`, `minlength`, `maxlength`) that strictly match the backend logic ensures users receive immediate, inline feedback, preventing frustration and state loss.
 **Action:** Always verify that frontend form inputs include corresponding HTML5 validation for all backend constraints.
+
+## $(date +%Y-%m-%d) - Explaining Format Requirements for Screen Readers
+**Learning:** Adding pattern attributes for regex validation on frontend form inputs is great, but users on screen readers might trigger errors without understanding why unless the format constraint is explicitly read to them before submission.
+**Action:** When adding strict regex or pattern validations to UI inputs, accompany them with visible helper text and link it using `aria-describedby` so the constraints are announced upfront to screen readers, preventing validation errors before they occur.
