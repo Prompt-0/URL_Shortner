@@ -2,8 +2,12 @@ use sqlx::Error;
 use url::Url;
 use uuid::Uuid;
 
+// ⚡ Bolt Optimization: Uuid string allocation
+// Use encode_buffer() and encode_lower() directly into a stack-allocated buffer
+// instead of intermediate .to_string() conversions.
 pub fn generate_code() -> String {
-    let raw = Uuid::new_v4().simple().to_string();
+    let mut buf = Uuid::encode_buffer();
+    let raw = Uuid::new_v4().simple().encode_lower(&mut buf);
     raw[..12].to_string()
 }
 
