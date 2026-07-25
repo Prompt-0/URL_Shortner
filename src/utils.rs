@@ -2,8 +2,12 @@ use sqlx::Error;
 use url::Url;
 use uuid::Uuid;
 
+// ⚡ Bolt Optimization: Stack-allocated UUID formatting
+// Uses Uuid::encode_buffer() to render the UUID directly into a stack buffer,
+// avoiding the intermediate String allocation before slicing the first 12 characters.
 pub fn generate_code() -> String {
-    let raw = Uuid::new_v4().simple().to_string();
+    let mut buf = Uuid::encode_buffer();
+    let raw = Uuid::new_v4().simple().encode_lower(&mut buf);
     raw[..12].to_string()
 }
 
@@ -85,4 +89,15 @@ pub fn render_template(template: &str, replacements: &[(&str, &str)]) -> String 
     }
     result.push_str(current);
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_generate_code() {
+        let code = generate_code();
+        assert_eq!(code.len(), 12);
+    }
 }
