@@ -9,3 +9,7 @@
 ## $(date +%Y-%m-%d) - Align Frontend Validation with Backend Rules
 **Learning:** In server-rendered applications, generic error pages can cause users to lose their form input state. Adding HTML5 validation attributes (`pattern`, `minlength`, `maxlength`) that strictly match the backend logic ensures users receive immediate, inline feedback, preventing frustration and state loss.
 **Action:** Always verify that frontend form inputs include corresponding HTML5 validation for all backend constraints.
+
+## 2026-07-25 - Explicit Form Validation Helper Text
+**Learning:** When using strict regex/pattern validations (like only letters, numbers, hyphens), relying solely on the `title` attribute or generic errors is insufficient for screen readers and user visibility. Linking explicit, visible helper text using `aria-describedby` prevents errors proactively.
+**Action:** Always accompany complex `pattern` validations with visible helper text and link it properly via ARIA attributes.
