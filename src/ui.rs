@@ -77,6 +77,11 @@ pub const HOME_HTML: &str = r#"
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
+    .help-text {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
     input {
       width: 100%;
       padding: 1rem 1.2rem;
@@ -137,7 +142,8 @@ pub const HOME_HTML: &str = r#"
         </div>
         <div class="form-group">
           <label for="custom_code">Custom Alias (Optional)</label>
-          <input id="custom_code" name="custom_code" type="text" placeholder="e.g. my-link" pattern="[a-zA-Z0-9\-_]+" minlength="3" maxlength="32" title="Must be 3-32 characters, using only letters, numbers, hyphens, and underscores">
+          <input id="custom_code" name="custom_code" type="text" placeholder="e.g. my-link" pattern="[a-zA-Z0-9\-_]+" minlength="3" maxlength="32" title="Must be 3-32 characters, using only letters, numbers, hyphens, and underscores" aria-describedby="custom_code_help">
+          <div id="custom_code_help" class="help-text">3-32 characters: letters, numbers, hyphens, and underscores</div>
         </div>
         <button type="submit">Create Short Link</button>
       </form>
