@@ -2,13 +2,13 @@ use sqlx::Error;
 use url::Url;
 use uuid::Uuid;
 
-// ⚡ Bolt Optimization: Zero-allocation UUID formatting
-// Avoids an intermediate String allocation by formatting the UUID
-// directly into a stack-allocated buffer before slicing and creating the final String.
+// ⚡ Bolt Optimization: Avoid intermediate string allocation during code generation
+// We use a stack-allocated buffer with `encode_lower` instead of `.to_string()`.
+// This removes one string allocation when generating unique codes.
 pub fn generate_code() -> String {
-    let mut buf = Uuid::encode_buffer();
-    let encoded = Uuid::new_v4().simple().encode_lower(&mut buf);
-    encoded[..12].to_string()
+    let mut buffer = Uuid::encode_buffer();
+    let raw = Uuid::new_v4().simple().encode_lower(&mut buffer);
+    raw[..12].to_string()
 }
 
 pub fn normalize_url(input: &str) -> Result<String, &'static str> {
