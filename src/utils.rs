@@ -2,9 +2,15 @@ use sqlx::Error;
 use url::Url;
 use uuid::Uuid;
 
+// ⚡ Bolt Optimization: Stack-allocated UUID encoding
+// Uses `Uuid::encode_buffer()` to encode the UUID into a stack-allocated buffer
+// instead of creating an intermediate String with `.to_string()`.
+// This reduces heap allocations and improves short code generation performance.
 pub fn generate_code() -> String {
-    let raw = Uuid::new_v4().simple().to_string();
-    raw[..12].to_string()
+    let uuid = Uuid::new_v4();
+    let mut buf = Uuid::encode_buffer();
+    let s = uuid.simple().encode_lower(&mut buf);
+    s[..12].to_string()
 }
 
 pub fn normalize_url(input: &str) -> Result<String, &'static str> {
