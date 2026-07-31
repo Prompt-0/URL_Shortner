@@ -155,6 +155,8 @@ pub async fn qr_code(
     use qrcode::QrCode;
     use qrcode::render::svg;
 
+    validate_custom_code(&code).map_err(|e| AppError::bad_request(e))?;
+
     let short_url = format!("{}/{}", state.base_url.trim_end_matches('/'), code);
     
     let qr = QrCode::new(short_url.as_bytes()).map_err(|e| {
