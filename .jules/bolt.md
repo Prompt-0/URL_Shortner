@@ -9,3 +9,7 @@
 ## 2024-11-20 - Zero-allocation UUID Formatting
 **Learning:** Calling `.to_string()` on UUIDs (like `Uuid::new_v4().simple().to_string()`) causes an unnecessary heap allocation, especially if you only need a substring.
 **Action:** Use `Uuid::encode_buffer()` and `uuid.encode_lower(&mut buf)` to write the formatted UUID directly to a stack-allocated buffer (a `[u8; 32]`). This eliminates the intermediate `String` allocation, resulting in faster and more memory-efficient string generation.
+
+## 2024-11-20 - SQLite WAL Mode Synchronous = NORMAL
+**Learning:** When using SQLite's Write-Ahead Logging (WAL) mode, the default synchronous setting (often `FULL`) still forces full disk syncs on transaction commits, which poses a significant write performance bottleneck (especially for frequent, low-latency background writes like click logging tasks).
+**Action:** Always configure `.synchronous(SqliteSynchronous::Normal)` when using `SqliteJournalMode::Wal`. This safely avoids syncing to disk on every single transaction commit, yielding massive write throughput improvements while preserving SQLite's safety guarantees in WAL mode.

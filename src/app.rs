@@ -3,7 +3,7 @@ use axum::Router;
 use moka::future::Cache;
 use sqlx::{
     SqlitePool,
-    sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions},
+    sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions, SqliteSynchronous},
 };
 use std::{env, error::Error, fs, net::SocketAddr, path::PathBuf};
 use tower_http::trace::TraceLayer;
@@ -18,10 +18,15 @@ pub async fn run() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     let db_path = data_dir.join("shortener.db");
 
+    // ⚡ Bolt Optimization: Set SQLite synchronous to NORMAL
+    // When using WAL mode, synchronous = NORMAL avoids syncing to disk on every
+    // transaction commit, providing a massive write performance boost (crucial for
+    // high-frequency background tasks like click logging) while maintaining safety.
     let options = SqliteConnectOptions::new()
         .filename(&db_path)
         .create_if_missing(true)
         .journal_mode(SqliteJournalMode::Wal)
+        .synchronous(SqliteSynchronous::Normal)
         .foreign_keys(true);
 
     let pool = SqlitePoolOptions::new()
