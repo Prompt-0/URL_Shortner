@@ -5,5 +5,5 @@ use sqlx::SqlitePool;
 pub struct AppState {
     pub pool: SqlitePool,
     pub base_url: String,
-    pub cache: Cache<String, String>,
+    pub cache: Cache<String, crate::models::LinkRecord>,
 }
