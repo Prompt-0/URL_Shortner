@@ -139,7 +139,8 @@ pub const HOME_HTML: &str = r#"
       <form action="/shorten" method="post">
         <div class="form-group">
           <label for="url">Long URL <span style="color: #ef4444;" aria-hidden="true">*</span></label>
-          <input id="url" name="url" type="url" placeholder="https://example.com/very-long-url" required>
+          <input id="url" name="url" type="url" placeholder="https://example.com/very-long-url" required aria-describedby="url_help">
+          <span id="url_help" class="helper-text">Must be a valid HTTP or HTTPS URL.</span>
         </div>
         <div class="form-group">
           <label for="custom_code">Custom Alias (Optional)</label>
