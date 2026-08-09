@@ -6,10 +6,14 @@
 **Learning:** In server-rendered applications, generic error pages can cause users to lose their form input state. Adding HTML5 validation attributes (, , ) that strictly match the backend logic ensures users receive immediate, inline feedback, preventing frustration and state loss.
 **Action:** Always verify that frontend form inputs include corresponding HTML5 validation for all backend constraints.
 
-## $(date +%Y-%m-%d) - Align Frontend Validation with Backend Rules
+## 2026-08-09 - Align Frontend Validation with Backend Rules
 **Learning:** In server-rendered applications, generic error pages can cause users to lose their form input state. Adding HTML5 validation attributes (`pattern`, `minlength`, `maxlength`) that strictly match the backend logic ensures users receive immediate, inline feedback, preventing frustration and state loss.
 **Action:** Always verify that frontend form inputs include corresponding HTML5 validation for all backend constraints.
 
 ## 2026-07-31 - Make form constraints explicitly visible and accessible
 **Learning:** Found that custom validation patterns (like `pattern` and `minlength`) in the UI were missing visible helper text, which means users wouldn't know the constraints until they failed validation. Relying only on `title` or failing on submit causes frustration.
 **Action:** When adding strict regex or pattern validations to UI inputs, accompany them with visible helper text and link it using `aria-describedby` so the constraints are announced upfront to screen readers, preventing validation errors before they occur.
+
+## 2026-08-09 - Make truncated text accessible and discoverable
+**Learning:** Found that using CSS `text-overflow: ellipsis` on long URLs without providing a way to inspect the full content hides critical information from users and breaks the experience. Also, making only one of two URLs in a table clickable creates an inconsistent and confusing UX.
+**Action:** Always pair `text-overflow: ellipsis` with a native `title` attribute or a custom tooltip to ensure full content is accessible on hover. Ensure interactive elements (like URLs) have consistent clickability across similar UI components.
