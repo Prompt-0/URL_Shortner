@@ -467,7 +467,7 @@ pub const STATS_HTML_TEMPLATE: &str = r#"
         </div>
         <div class="detail-row">
           <span class="detail-label">Original URL</span>
-          <span class="detail-value" style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{original_url}</span>
+          <span class="detail-value" style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{original_url}">{original_url}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Created At</span>
