@@ -9,3 +9,7 @@
 ## 2024-11-20 - Zero-allocation UUID Formatting
 **Learning:** Calling `.to_string()` on UUIDs (like `Uuid::new_v4().simple().to_string()`) causes an unnecessary heap allocation, especially if you only need a substring.
 **Action:** Use `Uuid::encode_buffer()` and `uuid.encode_lower(&mut buf)` to write the formatted UUID directly to a stack-allocated buffer (a `[u8; 32]`). This eliminates the intermediate `String` allocation, resulting in faster and more memory-efficient string generation.
+
+## $(date +%Y-%m-%d) - Iterate bytes for byte slicing
+**Learning:** `chars().enumerate()` provides the index of the character (e.g. 1st, 2nd, 3rd character), which is not the same as the byte offset for multi-byte Unicode characters (like emojis). Slicing a string `&input[..i]` using the character index panics if it lands inside a multi-byte character.
+**Action:** Always use `char_indices()` when you need the byte offset of a character for slicing or string operations, rather than `chars().enumerate()`.
