@@ -8,3 +8,7 @@
 **Vulnerability:** A Denial of Service (DoS) vulnerability existed in the `/qr/:code` endpoint (`src/handlers.rs`). The `code` path parameter was passed directly to the QR code generation library without any length or format validation. An attacker could send excessively large strings, causing CPU and memory exhaustion during QR code rendering.
 **Learning:** In axum, path parameters like `Path(code): Path<String>` are conceptually unbounded unless explicitly validated in the handler. Operations whose computational complexity scales with input size (like rendering a QR code or hashing) must validate inputs before processing.
 **Prevention:** Always validate path and query parameters before using them in expensive operations. Reused existing custom validation logic (`validate_custom_code`) to limit the short code to a maximum of 32 characters, matching the backend constraints used during creation.
+## 2025-02-23 - Prevented Database Information Disclosure via API Errors
+**Vulnerability:** The API endpoints `create_link` and `get_link` were returning the raw database error strings back to the caller in JSON responses, leaking internal schema and query details.
+**Learning:** Returning unmasked strings directly via the API is a common vulnerability pattern when detailed errors map into `IntoResponse` enums or structures.
+**Prevention:** Always log internal database or server errors securely using `tracing::error!` and respond to API requests with a generic error message (e.g. "Internal server error") to prevent information disclosure.
