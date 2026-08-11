@@ -9,3 +9,7 @@
 ## 2024-11-20 - Zero-allocation UUID Formatting
 **Learning:** Calling `.to_string()` on UUIDs (like `Uuid::new_v4().simple().to_string()`) causes an unnecessary heap allocation, especially if you only need a substring.
 **Action:** Use `Uuid::encode_buffer()` and `uuid.encode_lower(&mut buf)` to write the formatted UUID directly to a stack-allocated buffer (a `[u8; 32]`). This eliminates the intermediate `String` allocation, resulting in faster and more memory-efficient string generation.
+
+## 2024-11-20 - Avoid Cow allocations when unnecessary
+**Learning:** Returning a `Cow<'_, str>` instead of a `String` from functions like `escape_html` can avoid unnecessary memory allocations when the string doesn't actually need escaping. However, changing the return type of a public utility function is a breaking change that requires updating all call sites that expect a strict `String` (e.g., using `escape_html(...).into_owned()` where necessary). Since we use `render_template` which expects `&str` values in the replacement array, passing `&escape_html(...)` works automatically via deref coercion when `Cow` is returned.
+**Action:** When implementing `Cow` optimizations, ensure it does not break call sites. Verify that deref coercion allows `&Cow<'_, str>` to be passed to functions expecting `&str`, like `render_template`.

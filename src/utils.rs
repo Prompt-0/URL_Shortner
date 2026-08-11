@@ -35,12 +35,14 @@ pub fn validate_custom_code(code: &str) -> Result<(), &'static str> {
     Ok(())
 }
 
-// ⚡ Bolt Optimization: Single-pass HTML escaping
-// Replaces 5 separate string allocations from chained .replace() calls
-// with a single pre-allocated String and a match statement.
-// Yields ~2.3x performance improvement for typical HTML escaping.
-pub fn escape_html(input: &str) -> String {
-    let mut out = String::with_capacity(input.len());
+// ⚡ Bolt Optimization: Avoid allocations when escaping is unnecessary
+// By checking if the string contains any characters that need escaping,
+// we can return a Cow::Borrowed if no escaping is needed, saving an allocation.
+pub fn escape_html(input: &str) -> std::borrow::Cow<'_, str> {
+    if !input.contains(&['&', '<', '>', '"', '\''][..]) {
+        return std::borrow::Cow::Borrowed(input);
+    }
+    let mut out = String::with_capacity(input.len() + 16);
     for c in input.chars() {
         match c {
             '&' => out.push_str("&amp;"),
@@ -51,7 +53,7 @@ pub fn escape_html(input: &str) -> String {
             _ => out.push(c),
         }
     }
-    out
+    std::borrow::Cow::Owned(out)
 }
 
 pub fn is_unique_violation(err: &Error) -> bool {
