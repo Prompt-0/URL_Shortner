@@ -1,5 +1,4 @@
 use crate::{
-    error::AppError,
     models::{ApiErrorResponse, CreateLinkJsonRequest},
     services::{self, CreateLinkError},
     state::AppState,
@@ -9,7 +8,6 @@ use axum::{
     Json,
     extract::{Path, State},
     http::StatusCode,
-    response::IntoResponse,
 };
 
 pub async fn create_link(
@@ -35,7 +33,10 @@ pub async fn create_link(
             CreateLinkError::Exhausted => {
                 service_unavailable("could not allocate a unique short code")
             }
-            CreateLinkError::Database(db_err) => internal(&format!("database error: {db_err}")),
+            CreateLinkError::Database(db_err) => {
+                tracing::error!("Database error: {db_err}");
+                internal("internal server error")
+            }
         })?;
 
     Ok(Json(record.to_response(&state.base_url)))
@@ -47,7 +48,10 @@ pub async fn get_link(
 ) -> Result<Json<crate::models::LinkResponse>, (StatusCode, Json<ApiErrorResponse>)> {
     let Some(link) = crate::db::fetch_link(&state.pool, &code)
         .await
-        .map_err(|e| internal(&format!("database error: {e}")))?
+        .map_err(|e| {
+            tracing::error!("Database error: {e}");
+            internal("internal server error")
+        })?
     else {
         return Err(not_found("short link not found"));
     };
