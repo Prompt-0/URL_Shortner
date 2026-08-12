@@ -9,3 +9,6 @@
 ## 2024-11-20 - Zero-allocation UUID Formatting
 **Learning:** Calling `.to_string()` on UUIDs (like `Uuid::new_v4().simple().to_string()`) causes an unnecessary heap allocation, especially if you only need a substring.
 **Action:** Use `Uuid::encode_buffer()` and `uuid.encode_lower(&mut buf)` to write the formatted UUID directly to a stack-allocated buffer (a `[u8; 32]`). This eliminates the intermediate `String` allocation, resulting in faster and more memory-efficient string generation.
+## 2024-08-12 - Zero-allocation fast path for `escape_html`
+**Learning:** `String::with_capacity` in a loop inside `escape_html` causes memory allocations even when strings have no special characters. Changing the return type from `String` to `std::borrow::Cow<'_, str>` allows returning a zero-allocation reference (`Cow::Borrowed`) when escaping is unnecessary, avoiding allocations entirely. Coercion seamlessly allows substituting `String` with `Cow` in call-sites like `utils::render_template`.
+**Action:** When implementing helper functions that potentially modify strings, but often don't, return `std::borrow::Cow` instead of `String` to eliminate allocations on the hot fast-path.

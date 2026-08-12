@@ -39,9 +39,25 @@ pub fn validate_custom_code(code: &str) -> Result<(), &'static str> {
 // Replaces 5 separate string allocations from chained .replace() calls
 // with a single pre-allocated String and a match statement.
 // Yields ~2.3x performance improvement for typical HTML escaping.
-pub fn escape_html(input: &str) -> String {
-    let mut out = String::with_capacity(input.len());
-    for c in input.chars() {
+use std::borrow::Cow;
+
+pub fn escape_html(input: &str) -> Cow<'_, str> {
+    let mut first_special = None;
+    for (i, c) in input.char_indices() {
+        if matches!(c, '&' | '<' | '>' | '"' | '\'') {
+            first_special = Some(i);
+            break;
+        }
+    }
+
+    let Some(first) = first_special else {
+        return Cow::Borrowed(input);
+    };
+
+    let mut out = String::with_capacity(input.len() + 16);
+    out.push_str(&input[..first]);
+
+    for c in input[first..].chars() {
         match c {
             '&' => out.push_str("&amp;"),
             '<' => out.push_str("&lt;"),
@@ -51,7 +67,7 @@ pub fn escape_html(input: &str) -> String {
             _ => out.push(c),
         }
     }
-    out
+    Cow::Owned(out)
 }
 
 pub fn is_unique_violation(err: &Error) -> bool {
