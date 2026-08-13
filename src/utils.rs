@@ -39,19 +39,32 @@ pub fn validate_custom_code(code: &str) -> Result<(), &'static str> {
 // Replaces 5 separate string allocations from chained .replace() calls
 // with a single pre-allocated String and a match statement.
 // Yields ~2.3x performance improvement for typical HTML escaping.
-pub fn escape_html(input: &str) -> String {
-    let mut out = String::with_capacity(input.len());
-    for c in input.chars() {
-        match c {
-            '&' => out.push_str("&amp;"),
-            '<' => out.push_str("&lt;"),
-            '>' => out.push_str("&gt;"),
-            '"' => out.push_str("&quot;"),
-            '\'' => out.push_str("&#39;"),
-            _ => out.push(c),
+pub fn escape_html(input: &str) -> std::borrow::Cow<'_, str> {
+    let mut first = None;
+    for (i, c) in input.char_indices() {
+        if matches!(c, '&' | '<' | '>' | '"' | '\'') {
+            first = Some(i);
+            break;
         }
     }
-    out
+
+    if let Some(i) = first {
+        let mut out = String::with_capacity(input.len() + 10);
+        out.push_str(&input[..i]);
+        for c in input[i..].chars() {
+            match c {
+                '&' => out.push_str("&amp;"),
+                '<' => out.push_str("&lt;"),
+                '>' => out.push_str("&gt;"),
+                '"' => out.push_str("&quot;"),
+                '\'' => out.push_str("&#39;"),
+                _ => out.push(c),
+            }
+        }
+        std::borrow::Cow::Owned(out)
+    } else {
+        std::borrow::Cow::Borrowed(input)
+    }
 }
 
 pub fn is_unique_violation(err: &Error) -> bool {
