@@ -9,3 +9,7 @@
 ## 2024-11-20 - Zero-allocation UUID Formatting
 **Learning:** Calling `.to_string()` on UUIDs (like `Uuid::new_v4().simple().to_string()`) causes an unnecessary heap allocation, especially if you only need a substring.
 **Action:** Use `Uuid::encode_buffer()` and `uuid.encode_lower(&mut buf)` to write the formatted UUID directly to a stack-allocated buffer (a `[u8; 32]`). This eliminates the intermediate `String` allocation, resulting in faster and more memory-efficient string generation.
+
+## 2026-08-14 - Zero-allocation String Escape with Cow
+**Learning:** Returning `String` from functions like `escape_html` forces a memory allocation even when the input doesn't contain any characters that need escaping. This is common for strings like clean URLs or standard text.
+**Action:** Use `std::borrow::Cow<'_, str>` for string transformation functions that often return their inputs unmodified. Check for the condition first, and return `Cow::Borrowed(input)` if no modification is needed, reserving `Cow::Owned(out)` only for strings that actually require transformation and thus allocation. This yields significant performance improvements for unmodified strings.
