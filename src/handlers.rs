@@ -63,7 +63,7 @@ pub async fn shorten(
             ("{code}", &record.code),
             ("{short_url}", &short_url),
             ("{stats_url}", &stats_url),
-            ("{original_url}", &escape_html(&record.original_url)),
+            ("{original_url}", &*escape_html(&record.original_url)),
         ],
     );
 
@@ -138,11 +138,11 @@ pub async fn stats(
     let html = crate::utils::render_template(
         ui::STATS_HTML_TEMPLATE,
         &[
-            ("{code}", &escape_html(&link.code)),
-            ("{short_url}", &escape_html(&short_url)),
-            ("{stats_url}", &escape_html(&stats_url)),
-            ("{original_url}", &escape_html(&link.original_url)),
-            ("{created_at}", &escape_html(&link.created_at)),
+            ("{code}", &*escape_html(&link.code)),
+            ("{short_url}", &*escape_html(&short_url)),
+            ("{stats_url}", &*escape_html(&stats_url)),
+            ("{original_url}", &*escape_html(&link.original_url)),
+            ("{created_at}", &*escape_html(&link.created_at)),
             ("{clicks}", &clicks_str),
         ],
     );

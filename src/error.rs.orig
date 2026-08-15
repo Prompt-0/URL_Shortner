@@ -96,9 +96,9 @@ fn error_page(title: &str, message: &str) -> String {
 </body>
 </html>
 "#,
-        &*crate::utils::escape_html(title),
-        &*crate::utils::escape_html(title),
-        &*crate::utils::escape_html(message)
+        crate::utils::escape_html(title),
+        crate::utils::escape_html(title),
+        crate::utils::escape_html(message)
     )
 }
 

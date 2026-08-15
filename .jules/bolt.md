@@ -9,7 +9,6 @@
 ## 2024-11-20 - Zero-allocation UUID Formatting
 **Learning:** Calling `.to_string()` on UUIDs (like `Uuid::new_v4().simple().to_string()`) causes an unnecessary heap allocation, especially if you only need a substring.
 **Action:** Use `Uuid::encode_buffer()` and `uuid.encode_lower(&mut buf)` to write the formatted UUID directly to a stack-allocated buffer (a `[u8; 32]`). This eliminates the intermediate `String` allocation, resulting in faster and more memory-efficient string generation.
-
-## 2024-11-20 - SQLite Triggers for Analytics
-**Learning:** Performing multiple sequential database operations (like updating a click counter then inserting a click record) within an application transaction causes unnecessary application-to-database roundtrips.
-**Action:** Use an `AFTER INSERT` SQLite trigger on the analytics table (`clicks`) to automatically update counters on the main table (`links`). This eliminates the explicit transaction and the `UPDATE` query from the application layer, reducing DB roundtrips and improving performance on high-traffic endpoints.
+## 2024-10-24 - Zero-allocation string escaping
+**Learning:** Returning a `String` from formatting functions always allocates memory, even if no formatting is actually required. In this codebase, URLs and form inputs are escaped frequently before rendering to templates, but most input doesn't actually contain characters like `<` or `>` that need escaping.
+**Action:** Use `std::borrow::Cow<'_, str>` for string manipulation functions like `escape_html`. This allows returning a zero-cost `Cow::Borrowed` when no changes are made, avoiding a memory allocation, while retaining the ability to return a `Cow::Owned(String)` when modifications are necessary.
