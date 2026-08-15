@@ -13,3 +13,6 @@
 ## 2026-07-31 - Make form constraints explicitly visible and accessible
 **Learning:** Found that custom validation patterns (like `pattern` and `minlength`) in the UI were missing visible helper text, which means users wouldn't know the constraints until they failed validation. Relying only on `title` or failing on submit causes frustration.
 **Action:** When adding strict regex or pattern validations to UI inputs, accompany them with visible helper text and link it using `aria-describedby` so the constraints are announced upfront to screen readers, preventing validation errors before they occur.
+## 2026-08-15 - Accessible Truncated URLs
+**Learning:** When using `text-overflow: ellipsis` in UI templates, ensure the truncated text is accessible to screen readers and keyboard users.
+**Action:** Add `title` attribute for hover and `tabindex="0"` with `:focus-visible` styling for keyboard users on truncated spans to reveal the full content natively.

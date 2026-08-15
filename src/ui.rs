@@ -412,7 +412,8 @@ pub const STATS_HTML_TEMPLATE: &str = r#"
       border-radius: 4px;
     }
     .detail-value a { color: #60a5fa; text-decoration: none; }
-    .detail-value a:focus-visible {
+    .detail-value a:focus-visible,
+    .detail-value[tabindex="0"]:focus-visible {
       outline: none;
       box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.5);
       border-radius: 4px;
@@ -467,7 +468,7 @@ pub const STATS_HTML_TEMPLATE: &str = r#"
         </div>
         <div class="detail-row">
           <span class="detail-label">Original URL</span>
-          <span class="detail-value" style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{original_url}</span>
+          <span class="detail-value" style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{original_url}" tabindex="0">{original_url}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Created At</span>
