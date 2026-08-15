@@ -76,8 +76,10 @@ pub async fn redirect_short_link(
     headers: HeaderMap,
     Path(code): Path<String>,
 ) -> AppResult<Redirect> {
-    let link = if let Some(link) = state.cache.get(&code).await {
-        link
+    validate_custom_code(&code).map_err(|e| AppError::bad_request(e))?;
+
+    let original_url = if let Some(url) = state.cache.get(&code).await {
+        url
     } else {
         let Some(link) = db::fetch_link(&state.pool, &code).await.map_err(|e| {
             tracing::error!("Database error: {e}");
@@ -124,6 +126,8 @@ pub async fn stats(
     State(state): State<AppState>,
     Path(code): Path<String>,
 ) -> AppResult<Html<String>> {
+    validate_custom_code(&code).map_err(|e| AppError::bad_request(e))?;
+
     let Some(link) = db::fetch_link(&state.pool, &code).await.map_err(|e| {
         tracing::error!("Database error: {e}");
         AppError::internal("Internal server error")

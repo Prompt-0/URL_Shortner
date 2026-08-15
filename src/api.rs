@@ -48,6 +48,8 @@ pub async fn get_link(
     State(state): State<AppState>,
     Path(code): Path<String>,
 ) -> Result<Json<crate::models::LinkResponse>, (StatusCode, Json<ApiErrorResponse>)> {
+    crate::utils::validate_custom_code(&code).map_err(|e| bad_request(e))?;
+
     let Some(link) = crate::db::fetch_link(&state.pool, &code)
         .await
         .map_err(|e| {
