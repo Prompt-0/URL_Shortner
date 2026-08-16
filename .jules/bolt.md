@@ -9,3 +9,7 @@
 ## 2024-11-20 - Zero-allocation UUID Formatting
 **Learning:** Calling `.to_string()` on UUIDs (like `Uuid::new_v4().simple().to_string()`) causes an unnecessary heap allocation, especially if you only need a substring.
 **Action:** Use `Uuid::encode_buffer()` and `uuid.encode_lower(&mut buf)` to write the formatted UUID directly to a stack-allocated buffer (a `[u8; 32]`). This eliminates the intermediate `String` allocation, resulting in faster and more memory-efficient string generation.
+
+## 2024-11-20 - Use SQLite triggers to reduce database roundtrips
+**Learning:** Performing multiple database operations (e.g. `UPDATE` and `INSERT`) in an explicit application transaction requires multiple network/database roundtrips per operation, which increases latency under load.
+**Action:** When a secondary action (like updating a click counter) logically follows a primary action (like logging a click) within the same database context, shift the logic to an `AFTER INSERT` SQLite trigger. This pattern successfully reduced a 4-step sequence (BEGIN, UPDATE, INSERT, COMMIT) to a single INSERT query in `db::log_click`, minimizing latency and application overhead.

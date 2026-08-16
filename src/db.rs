@@ -51,6 +51,10 @@ pub async fn fetch_link(pool: &SqlitePool, code: &str) -> Result<Option<LinkReco
     }))
 }
 
+// ⚡ Bolt Optimization: Use SQLite Trigger for click counting
+// Replaced a manual transaction involving an UPDATE and INSERT with a single INSERT.
+// The click increment is now handled by a database trigger (`increment_clicks_on_insert`),
+// reducing database roundtrips from 4 (BEGIN, UPDATE, INSERT, COMMIT) to 1.
 pub async fn log_click(
     pool: &SqlitePool,
     code: &str,
@@ -58,19 +62,6 @@ pub async fn log_click(
     referer: Option<&str>,
     ip_address: Option<&str>,
 ) -> Result<(), sqlx::Error> {
-    let mut tx = pool.begin().await?;
-
-    sqlx::query(
-        r#"
-        UPDATE links
-        SET clicks = clicks + 1
-        WHERE code = ?1
-        "#,
-    )
-    .bind(code)
-    .execute(&mut *tx)
-    .await?;
-
     let clicked_at = chrono::Utc::now().to_rfc3339();
 
     sqlx::query(
@@ -84,10 +75,8 @@ pub async fn log_click(
     .bind(referer)
     .bind(ip_address)
     .bind(clicked_at)
-    .execute(&mut *tx)
+    .execute(pool)
     .await?;
-
-    tx.commit().await?;
 
     Ok(())
 }
