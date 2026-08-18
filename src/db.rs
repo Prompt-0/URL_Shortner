@@ -9,8 +9,6 @@ pub async fn insert_link(
     expires_at: Option<&str>,
     password: Option<&str>,
 ) -> Result<(), sqlx::Error> {
-    let mut tx = pool.begin().await?;
-
     sqlx::query(
         r#"
         INSERT INTO links (code, original_url, created_at, clicks, expires_at, password)
@@ -22,10 +20,9 @@ pub async fn insert_link(
     .bind(created_at)
     .bind(expires_at)
     .bind(password)
-    .execute(&mut *tx)
+    .execute(pool)
     .await?;
 
-    tx.commit().await?;
     Ok(())
 }
 
@@ -58,19 +55,6 @@ pub async fn log_click(
     referer: Option<&str>,
     ip_address: Option<&str>,
 ) -> Result<(), sqlx::Error> {
-    let mut tx = pool.begin().await?;
-
-    sqlx::query(
-        r#"
-        UPDATE links
-        SET clicks = clicks + 1
-        WHERE code = ?1
-        "#,
-    )
-    .bind(code)
-    .execute(&mut *tx)
-    .await?;
-
     let clicked_at = chrono::Utc::now().to_rfc3339();
 
     sqlx::query(
@@ -84,10 +68,8 @@ pub async fn log_click(
     .bind(referer)
     .bind(ip_address)
     .bind(clicked_at)
-    .execute(&mut *tx)
+    .execute(pool)
     .await?;
-
-    tx.commit().await?;
 
     Ok(())
 }
