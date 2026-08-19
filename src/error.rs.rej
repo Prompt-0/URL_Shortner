@@ -1,0 +1,14 @@
+--- error.rs
++++ error.rs
+@@ -96,9 +96,9 @@
+     let body = crate::utils::render_template(
+         crate::ui::ERROR_HTML_TEMPLATE,
+         &[
+-            ("{title}", &crate::utils::escape_html(title)),
+-            ("{error_title}", &crate::utils::escape_html(title)),
+-            ("{error_message}", &crate::utils::escape_html(message))
++            ("{title}", &*crate::utils::escape_html(title)),
++            ("{error_title}", &*crate::utils::escape_html(title)),
++            ("{error_message}", &*crate::utils::escape_html(message))
+         ],
+     );
