@@ -5,7 +5,7 @@ use crate::{
     services,
     state::AppState,
     ui,
-    utils::{escape_html, normalize_url, validate_custom_code},
+    utils::{escape_html, normalize_url, render_template, validate_custom_code},
 };
 use axum::{
     extract::{ConnectInfo, Form, Path, State},
@@ -57,14 +57,16 @@ pub async fn shorten(
     let short_url = format!("{}/{}", state.base_url.trim_end_matches('/'), record.code);
     let stats_url = format!("/stats/{}", record.code);
 
-    let body = crate::utils::render_template(
+    let original_url_escaped = escape_html(&record.original_url);
+
+    let body = render_template(
         ui::SUCCESS_HTML_TEMPLATE,
         &[
             ("{code}", &record.code),
             ("{short_url}", &short_url),
             ("{stats_url}", &stats_url),
-            ("{original_url}", &*escape_html(&record.original_url)),
-        ],
+            ("{original_url}", &original_url_escaped),
+        ]
     );
 
     Ok(Html(body))
@@ -163,17 +165,23 @@ pub async fn stats(
     let short_url = format!("{}/{}", state.base_url.trim_end_matches('/'), link.code);
     let stats_url = format!("/stats/{}", link.code);
 
+    let code_escaped = escape_html(&link.code);
+    let short_url_escaped = escape_html(&short_url);
+    let stats_url_escaped = escape_html(&stats_url);
+    let original_url_escaped = escape_html(&link.original_url);
+    let created_at_escaped = escape_html(&link.created_at);
     let clicks_str = link.clicks.to_string();
-    let html = crate::utils::render_template(
+
+    let html = render_template(
         ui::STATS_HTML_TEMPLATE,
         &[
-            ("{code}", &*escape_html(&link.code)),
-            ("{short_url}", &*escape_html(&short_url)),
-            ("{stats_url}", &*escape_html(&stats_url)),
-            ("{original_url}", &*escape_html(&link.original_url)),
-            ("{created_at}", &*escape_html(&link.created_at)),
+            ("{code}", &code_escaped),
+            ("{short_url}", &short_url_escaped),
+            ("{stats_url}", &stats_url_escaped),
+            ("{original_url}", &original_url_escaped),
+            ("{created_at}", &created_at_escaped),
             ("{clicks}", &clicks_str),
-        ],
+        ]
     );
 
     Ok(Html(html))
