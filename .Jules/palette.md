@@ -2,14 +2,6 @@
 **Learning:** Found that custom UI components (like glassmorphism cards and stylized links/buttons) in this URL shortener lacked `:focus-visible` states, which makes keyboard navigation difficult. Also, required form fields were missing visual indicators for users, making form validation less apparent.
 **Action:** Always verify that custom stylized buttons and links include `:focus-visible` styles that contrast well with their backgrounds. Ensure required form inputs explicitly mark their necessity visually, like with an asterisk.
 
-## 2026-07-17 - Align Frontend Validation with Backend Rules
-**Learning:** In server-rendered applications, generic error pages can cause users to lose their form input state. Adding HTML5 validation attributes (, , ) that strictly match the backend logic ensures users receive immediate, inline feedback, preventing frustration and state loss.
-**Action:** Always verify that frontend form inputs include corresponding HTML5 validation for all backend constraints.
-
-## 2026-08-18 - Align Frontend Validation with Backend Rules
-**Learning:** In server-rendered applications, generic error pages can cause users to lose their form input state. Adding HTML5 validation attributes (`pattern`, `minlength`, `maxlength`) that strictly match the backend logic ensures users receive immediate, inline feedback, preventing frustration and state loss.
-**Action:** Always verify that frontend form inputs include corresponding HTML5 validation for all backend constraints.
-
-## 2024-07-29 - Visible Helper Text for Strict Validations
-**Learning:** When enforcing strict UI validations (e.g., regex patterns for custom aliases), screen reader users are prone to validation errors because native `title` or `pattern` attributes often do not get announced *before* submission.
-**Action:** Always accompany strict regex/pattern UI validations with visible helper text, and link it to the input field using `aria-describedby` so the constraints are announced upfront.
+## 2026-07-07 - Prevent Loss of Form State with HTML5 Validation
+**Learning:** Found that when the backend rejects form input (like invalid custom alias formats), users are redirected to a generic error page, losing their form state and context.
+**Action:** Use HTML5 form validation (`pattern`, `minlength`, `maxlength`) matching backend constraints to provide immediate, inline feedback. This prevents unnecessary roundtrips and keeps the user in their current context without losing input data.
